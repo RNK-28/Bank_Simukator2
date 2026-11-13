@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RNK Digital Bank | Google Sheets Synced</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'scale-in': 'scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: 0, transform: 'translateY(25px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' },
+                        },
+                        scaleIn: {
+                            '0%': { opacity: 0, transform: 'scale(0.92)' },
+                            '100%': { opacity: 1, transform: 'scale(1)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)' },
+                            '50%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.8)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
+        .glass-card {
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dark .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        }
+        .light .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        }
+        .card-gradient-gold { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #b45309 100%); }
+        .card-gradient-user { background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%); }
+        .btn-press:active { transform: scale(0.96); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 9999px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-[#070b14] dark:text-slate-100 min-h-screen relative selection:bg-indigo-500 selection:text-white">
+
+    <!-- Ambient Background Orbs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 dark:bg-indigo-600/25 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute top-1/2 -right-32 w-96 h-96 bg-cyan-500/20 dark:bg-cyan-500/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-[#0b1120]/75 backdrop-blur-xl sticky top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 animate-pulse-glow">
+                    <i class="fa-solid fa-building-columns text-lg sm:text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-extrabold text-lg sm:text-2xl tracking-tight bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
+                        RNK Digital Bank
+                    </h1>
+                    <p class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider uppercase">Google Sheets Sync & Govt Billing</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Sync Status Badge -->
+                <div id="sync-status-badge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span id="sync-text">Sheets Connected</span>
+                </div>
+
+                <!-- Google Sheet Settings Button -->
+                <button onclick="openSheetConfigModal()" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white border border-indigo-500/30 font-semibold text-xs sm:text-sm transition-all btn-press" title="Configure Google Sheets URL">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span class="hidden md:inline">Sheet URL</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button onclick="toggleSound()" id="sound-btn" class="p-2.5 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 hover:bg-indigo-500 hover:text-white transition-all btn-press">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 hover:bg-amber-500 hover:text-white transition-all btn-press">
+                    <i id="theme-icon" class="fa-solid fa-sun text-sm text-amber-400"></i>
+                </button>
+
+                <!-- Full Reset -->
+                <button onclick="openResetModal()" class="px-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/30 font-semibold text-xs sm:text-sm transition-all btn-press" title="Reset All Data">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[65vh] text-center">
+            <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+            <h2 class="text-xl font-bold font-display">Syncing with Google Sheets Vault...</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Loading accounts, bills & ledger records</p>
+        </div>
+
+        <!-- VIEW 1: LOGIN SCREEN -->
+        <section id="login-view" class="hidden max-w-md mx-auto mt-4 sm:mt-10 animate-slide-up">
+            <div class="glass-card rounded-3xl p-6 sm:p-9 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-cyan-400 to-amber-500"></div>
+
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-600/15 border border-indigo-500/30 flex items-center justify-center text-indigo-500 mb-4 shadow-inner">
+                        <i class="fa-solid fa-shield-halved text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold">Secure Vault Login</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5">Enter your RNK Account ID (e.g., Govt_88_87 or Citizen ID) & Password</p>
+                </div>
+
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Account ID</label>
+                        <input type="text" id="login-id" required placeholder="Enter Account ID (e.g., Govt_88_87)" autocomplete="off"
+                            class="w-full px-4 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-indigo-500 outline-none font-medium text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Password</label>
+                        <input type="password" id="login-pass" required placeholder="Enter Password"
+                            class="w-full px-4 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-indigo-500 outline-none font-medium text-sm">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 text-white font-bold text-base shadow-lg shadow-indigo-600/30 transition-all btn-press">
+                        <span>Login to Vault</span> <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 2: USER DASHBOARD -->
+        <section id="user-dashboard" class="hidden space-y-6 sm:space-y-8 animate-slide-up">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-card rounded-3xl p-5 sm:p-6">
+                <div class="flex items-center gap-4">
+                    <div id="user-avatar" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-display font-extrabold text-2xl shadow-lg">N</div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-500 border border-indigo-500/20">VERIFIED CITIZEN</span>
+                            <span id="user-id-badge" class="text-xs font-mono text-slate-400"></span>
+                        </div>
+                        <h2 id="user-display-name" class="text-2xl sm:text-3xl font-display font-extrabold mt-0.5"></h2>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 self-end sm:self-center">
+                    <button onclick="showPinReveal()" class="px-4 py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-semibold text-sm transition-all btn-press">
+                        <i class="fa-solid fa-key mr-1.5"></i> <span id="pin-btn-text">Show PIN</span>
+                    </button>
+                    <button onclick="handleLogout()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-600 text-white font-semibold text-sm transition-all btn-press">
+                        <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Balance & Transfer Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="card-gradient-user rounded-3xl p-6 sm:p-7 text-white shadow-2xl relative overflow-hidden">
+                        <p class="text-xs uppercase tracking-widest text-blue-200 font-semibold">Google Sheets Synced Balance</p>
+                        <h3 id="user-balance" class="text-3xl sm:text-4xl font-display font-extrabold mt-1 tracking-tight">RS = 0</h3>
+                        <div class="mt-8 pt-4 border-t border-white/15 flex justify-between items-end">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-blue-200">Account Holder</p>
+                                <p id="card-holder-name" class="font-semibold text-base mt-0.5"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase tracking-widest text-blue-200">Security PIN</p>
+                                <p id="card-pin-badge" class="font-mono font-bold text-sm bg-white/15 px-2.5 py-0.5 rounded-lg mt-0.5">****</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Government Pay -->
+                    <div class="glass-card rounded-3xl p-6">
+                        <h3 class="font-display font-bold text-lg mb-3 flex items-center gap-2"><i class="fa-solid fa-landmark text-amber-500"></i> Pay Directly to Government</h3>
+                        <form onsubmit="handlePayGovtDirect(event)" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="number" id="govt-direct-amount" min="1" required placeholder="Amount RS" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-semibold">
+                                <input type="password" id="govt-direct-pin" maxlength="4" required placeholder="4-Digit PIN" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-mono font-bold">
+                            </div>
+                            <input type="text" id="govt-direct-note" placeholder="Purpose (Voluntary Tax, Fee, Zakat)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm">
+                            <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-lg btn-press">Send to Government Sheet</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Money Transfer Box -->
+                <div class="lg:col-span-7 glass-card rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-display font-bold text-xl mb-1 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-indigo-500"></i> Instant Money Transfer</h3>
+                        <p class="text-xs text-slate-400 mb-4">Send funds to other citizens. Visible in both parties' ledgers.</p>
+
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">Search Recipient</label>
+                            <input type="text" id="recipient-search" oninput="filterRecipients()" placeholder="Type citizen name or ID..." class="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm">
+                            <div id="recipient-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-36 overflow-y-auto"></div>
+                        </div>
+
+                        <div id="selected-recipient-box" class="hidden mb-4 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex justify-between items-center">
+                            <span id="selected-recipient-name" class="font-bold text-sm"></span>
+                            <button type="button" onclick="clearSelectedRecipient()" class="text-xs text-rose-500 font-bold">Change</button>
+                        </div>
+
+                        <form id="transfer-form" onsubmit="handleMoneyTransfer(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <input type="number" id="transfer-amount" min="1" required placeholder="Transfer Amount RS" class="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none font-bold">
+                                <input type="password" id="transfer-pin" maxlength="4" required placeholder="Your 4-Digit PIN" class="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none font-mono font-bold tracking-widest text-center">
+                            </div>
+                            <button type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg btn-press">Transfer via Google Sheets</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bills & Taxes Sent by Government -->
+            <div class="glass-card rounded-3xl p-6">
+                <h3 class="font-display font-bold text-lg mb-2 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-rose-500"></i> Government Bills & Taxes (Electric, Income Tax, etc.)</h3>
+                <p class="text-xs text-slate-400 mb-4">Pay before the end date. Unpaid bills will auto-deduct (partial or full) when deadline passes.</p>
+                <div id="user-bills-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- Detailed Who Sent / Who Received Ledger -->
+            <div class="glass-card rounded-3xl p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <h3 class="font-display font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> Transaction History (Sent & Received)</h3>
+                    <div class="flex gap-2 text-xs font-semibold">
+                        <button onclick="setHistoryFilter('all')" id="filter-all-btn" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white">All</button>
+                        <button onclick="setHistoryFilter('sent')" id="filter-sent-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300">Sent By Me</button>
+                        <button onclick="setHistoryFilter('received')" id="filter-received-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300">Received By Me</button>
+                    </div>
+                </div>
+                <div id="user-history-list" class="space-y-3 max-h-72 overflow-y-auto"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: GOVERNMENT COMMAND CENTER (Govt_88_87) -->
+        <section id="govt-dashboard" class="hidden space-y-6 sm:space-y-8 animate-slide-up">
+            <div class="card-gradient-gold rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-200 text-xs font-bold uppercase">Sovereign Authority: Govt_88_87</span>
+                        <h2 class="text-3xl font-display font-extrabold mt-1">Government Command & Treasury</h2>
+                        <p class="text-indigo-200 text-sm">Issue Electric Bills, Taxes, Mint Money, and Track All Citizen Balances Live in Sheets.</p>
+                    </div>
+                    <button onclick="handleLogout()" class="px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-lg btn-press">Exit Portal</button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-emerald-500">
+                    <p class="text-xs uppercase text-slate-400 font-bold">Total Govt Revenue</p>
+                    <h4 id="govt-total-collected" class="text-3xl font-display font-extrabold text-emerald-500 mt-1">RS = 0</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-cyan-500">
+                    <p class="text-xs uppercase text-slate-400 font-bold">Total Citizens</p>
+                    <h4 id="govt-total-citizens" class="text-3xl font-display font-extrabold text-cyan-500 mt-1">0</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-rose-500">
+                    <p class="text-xs uppercase text-slate-400 font-bold">Active Issued Bills</p>
+                    <h4 id="govt-active-bills-count" class="text-3xl font-display font-extrabold text-rose-500 mt-1">0</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-indigo-500">
+                    <p class="text-xs uppercase text-slate-400 font-bold">Total Transactions</p>
+                    <h4 id="govt-total-tx" class="text-3xl font-display font-extrabold text-indigo-500 mt-1">0</h4>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Send Bill / Tax -->
+                <div class="glass-card rounded-3xl p-6 lg:col-span-1">
+                    <h3 class="font-display font-bold text-lg mb-3"><i class="fa-solid fa-file-invoice text-amber-500"></i> Issue Bill / Tax to Citizen</h3>
+                    <form onsubmit="handleGovtIssueBill(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Target Citizen</label>
+                            <select id="govt-bill-user" required class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-semibold"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Bill Type</label>
+                            <select id="govt-bill-type" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-semibold">
+                                <option value="Electric Bill">Electric Bill</option>
+                                <option value="Income Tax">Income Tax</option>
+                                <option value="Property Tax">Property Tax</option>
+                                <option value="Water & Sanitation">Water & Sanitation</option>
+                                <option value="Fine / Penalty">Fine / Penalty</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Amount (RS)</label>
+                            <input type="number" id="govt-bill-amount" min="1" required placeholder="5000" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">End Date / Deadline</label>
+                            <input type="date" id="govt-bill-deadline" required class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-semibold">
+                        </div>
+                        <button type="submit" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm shadow-lg btn-press">Send Bill to Sheet</button>
+                    </form>
+                </div>
+
+                <!-- Mint Money & Register Citizen -->
+                <div class="glass-card rounded-3xl p-6 lg:col-span-2 space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Mint Money -->
+                        <div>
+                            <h3 class="font-display font-bold text-lg mb-3"><i class="fa-solid fa-coins text-emerald-500"></i> Disburse Funds</h3>
+                            <form onsubmit="handleGovtGrantMoney(event)" class="space-y-3">
+                                <select id="govt-grant-user" required class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-semibold"></select>
+                                <input type="number" id="govt-grant-amount" min="1" required placeholder="Amount RS" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-sm font-bold">
+                                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg btn-press">Mint & Save</button>
+                            </form>
+                        </div>
+
+                        <!-- Create Citizen -->
+                        <div>
+                            <h3 class="font-display font-bold text-lg mb-3"><i class="fa-solid fa-user-plus text-indigo-500"></i> New Citizen</h3>
+                            <form onsubmit="handleCreateCitizen(event)" class="space-y-2.5">
+                                <input type="text" id="new-user-name" required placeholder="Full Name" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="new-user-id" required placeholder="ID (e.g. Ali_12)" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-xs font-mono">
+                                    <input type="text" id="new-user-pass" required placeholder="Password" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-xs font-mono">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" id="new-user-bal" value="5000" required placeholder="Initial RS" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-xs font-bold">
+                                    <input type="text" id="new-user-pin" maxlength="4" required placeholder="4-Digit PIN" class="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-700 outline-none text-xs font-mono font-bold">
+                                </div>
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg btn-press">Create Account</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Govt Master Ledger / Transactions & Bills Table -->
+            <div class="glass-card rounded-3xl p-6 space-y-6">
+                <div>
+                    <h3 class="font-display font-bold text-xl mb-4"><i class="fa-solid fa-landmark text-amber-500"></i> Government Master Ledger (Who Paid Govt, Who Received Govt Funds)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-xs uppercase text-slate-400">
+                                    <th class="py-3 px-4">Tx ID</th>
+                                    <th class="py-3 px-4">Sender</th>
+                                    <th class="py-3 px-4">Recipient</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="govt-tx-table" class="divide-y divide-slate-800 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-800">
+                    <h3 class="font-display font-bold text-xl mb-4"><i class="fa-solid fa-users text-cyan-500"></i> All Citizens Managed via Google Sheets</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-xs uppercase text-slate-400">
+                                    <th class="py-3 px-4">Name</th>
+                                    <th class="py-3 px-4">ID</th>
+                                    <th class="py-3 px-4">PIN</th>
+                                    <th class="py-3 px-4">Balance</th>
+                                    <th class="py-3 px-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="govt-users-table" class="divide-y divide-slate-800 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: GOOGLE SHEETS URL CONFIGURATION -->
+    <div id="sheet-config-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-lg w-full p-6 sm:p-8 animate-scale-in border border-indigo-500/40">
+            <h3 class="text-2xl font-display font-extrabold mb-2">Google Sheets Web App URL</h3>
+            <p class="text-sm text-slate-400 mb-4">Apna Google Apps Script ka Web App URL yahan paste karein taake data seedha aapke Google Sheet mein save aur load ho.</p>
+            <form onsubmit="saveSheetUrl(event)" class="space-y-4">
+                <input type="url" id="sheet-url-input" required placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono text-indigo-300 outline-none">
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeSheetConfigModal()" class="flex-1 py-3 rounded-xl bg-slate-800 font-bold text-sm">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">Save & Sync</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FULL RESET -->
+    <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-md w-full p-6 sm:p-8 border-2 border-rose-500/40">
+            <h3 class="text-2xl font-display font-extrabold text-center mb-2">Full System Reset</h3>
+            <p class="text-sm text-slate-400 text-center mb-4">Master Password enter karein taake sheet reset hojaye.</p>
+            <form onsubmit="handleFullReset(event)" class="space-y-4">
+                <input type="password" id="reset-pass-input" required placeholder="Master Password (2rnk8)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 outline-none font-mono">
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeResetModal()" class="flex-1 py-3 rounded-xl bg-slate-800 font-bold text-sm">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 rounded-xl bg-rose-600 text-white font-bold text-sm">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT & GOOGLE SHEETS API CONNECTOR -->
+    <script>
+        let SCRIPT_URL = localStorage.getItem('rnk_sheets_url') || "";
+
+        let state = {
+            users: [
+                { id: "Govt_88_87", name: "Government Treasury", password: "2rnk8", balance: 99999999999, pin: "2026", role: "govt", banned: false }
+            ],
+            bills: [],
+            transactions: [],
+            currentSessionId: null,
+            selectedRecipientId: null,
+            pinRevealed: false,
+            historyFilter: 'all'
+        };
+
+        let soundEnabled = true;
+        let synth = null;
+
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+        window.playClick = () => { if(soundEnabled) { initAudio(); try { Tone.start(); synth.triggerAttackRelease("C6", "32n"); } catch(e){} } };
+        window.playSuccess = () => { if(soundEnabled) { initAudio(); try { Tone.start(); const now = Tone.now(); synth.triggerAttackRelease("C5", "16n", now); synth.triggerAttackRelease("G5", "16n", now + 0.1); } catch(e){} } };
+        window.playError = () => { if(soundEnabled) { initAudio(); try { Tone.start(); synth.triggerAttackRelease("F3", "16n"); } catch(e){} } };
+
+        window.toggleSound = () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-icon').className = soundEnabled ? "fa-solid fa-volume-high text-sm" : "fa-solid fa-volume-xmark text-sm text-rose-500";
+            showToast(soundEnabled ? "Sound enabled" : "Muted", "info");
+        };
+
+        window.toggleTheme = () => {
+            playClick();
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if(html.classList.contains('dark')) {
+                html.classList.remove('dark'); html.classList.add('light');
+                icon.className = "fa-solid fa-moon text-sm text-indigo-600";
+            } else {
+                html.classList.remove('light'); html.classList.add('dark');
+                icon.className = "fa-solid fa-sun text-sm text-amber-400";
+            }
+        };
+
+        window.showToast = (msg, type="success") => {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            const colors = { success: "bg-emerald-600", error: "bg-rose-600", info: "bg-indigo-600", warning: "bg-amber-500 text-slate-950" };
+            t.className = `pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-2xl text-white font-semibold text-sm ${colors[type]} animate-slide-up`;
+            t.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${msg}</span>`;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        };
+
+        // --- AUTOMATIC BILL DEADLINE CHECKER ---
+        async function checkAndProcessAutoDeadlines() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            let changed = false;
+
+            for(let bill of state.bills) {
+                if(bill.status === 'unpaid' && bill.deadline < todayStr) {
+                    // Deadline passed! Auto cut funds
+                    const targetUser = state.users.find(u => u.id === bill.userId);
+                    const govt = state.users.find(u => u.id === 'Govt_88_87');
+
+                    if(targetUser && govt) {
+                        const deductAmount = Math.min(targetUser.balance, bill.amount);
+                        targetUser.balance -= deductAmount;
+                        bill.paidAmount = (bill.paidAmount || 0) + deductAmount;
+
+                        const txObj = {
+                            id: 'AUTO-TX-' + Date.now() + Math.floor(Math.random()*100),
+                            fromId: targetUser.id,
+                            fromName: targetUser.name,
+                            toId: 'Govt_88_87',
+                            toName: 'Government Treasury',
+                            amount: deductAmount,
+                            category: `Auto-Deduct (${bill.type})`,
+                            timestamp: Date.now()
+                        };
+                        state.transactions.unshift(txObj);
+
+                        if(bill.paidAmount >= bill.amount) {
+                            bill.status = 'paid';
+                        } else {
+                            bill.status = 'partial'; // Remaining will be deducted when user gets funds next time
+                        }
+
+                        changed = true;
+                        await syncToSheets('updateUserBalance', { id: targetUser.id, balance: targetUser.balance });
+                        await syncToSheets('updateUserBalance', { id: govt.id, balance: govt.balance });
+                        await syncToSheets('addTransaction', txObj);
+                        await syncToSheets('updateBill', bill);
+                    }
+                } else if(bill.status === 'partial') {
+                    // Check if citizen has new balance to clear the remaining partial amount
+                    const targetUser = state.users.find(u => u.id === bill.userId);
+                    const govt = state.users.find(u => u.id === 'Govt_88_87');
+                    const remaining = bill.amount - (bill.paidAmount || 0);
+
+                    if(targetUser && remaining > 0 && targetUser.balance > 0) {
+                        const deductAmount = Math.min(targetUser.balance, remaining);
+                        targetUser.balance -= deductAmount;
+                        bill.paidAmount = (bill.paidAmount || 0) + deductAmount;
+
+                        const txObj = {
+                            id: 'AUTO-PARTIAL-' + Date.now() + Math.floor(Math.random()*100),
+                            fromId: targetUser.id,
+                            fromName: targetUser.name,
+                            toId: 'Govt_88_87',
+                            toName: 'Government Treasury',
+                            amount: deductAmount,
+                            category: `Remaining Auto-Deduct (${bill.type})`,
+                            timestamp: Date.now()
+                        };
+                        state.transactions.unshift(txObj);
+
+                        if(bill.paidAmount >= bill.amount) {
+                            bill.status = 'paid';
+                        }
+
+                        changed = true;
+                        await syncToSheets('updateUserBalance', { id: targetUser.id, balance: targetUser.balance });
+                        await syncToSheets('updateUserBalance', { id: govt.id, balance: govt.balance });
+                        await syncToSheets('addTransaction', txObj);
+                        await syncToSheets('updateBill', bill);
+                    }
+                }
+            }
+            if(changed && state.currentSessionId) {
+                renderApp();
+            }
+        }
+
+        // --- GOOGLE SHEETS API BRIDGE ---
+        async function fetchFromSheets() {
+            if (!SCRIPT_URL) {
+                document.getElementById('loading-screen').classList.add('hidden');
+                openSheetConfigModal();
+                return;
+            }
+            try {
+                const res = await fetch(SCRIPT_URL + "?action=getData");
+                const data = await res.json();
+                if(data && data.users) {
+                    state.users = data.users;
+                    state.bills = data.bills || [];
+                    state.transactions = data.transactions || [];
+                }
+            } catch(err) {
+                console.error("Sheets fetch error:", err);
+                showToast("Failed to load from Google Sheet. Check URL.", "error");
+            }
+            document.getElementById('loading-screen').classList.add('hidden');
+            await checkAndProcessAutoDeadlines();
+            renderApp();
+        }
+
+        async function syncToSheets(action, payload) {
+            if(!SCRIPT_URL) return;
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, ...payload })
+                });
+            } catch(err) {
+                console.error("Sync error:", err);
+            }
+        }
+
+        window.openSheetConfigModal = () => {
+            document.getElementById('sheet-url-input').value = SCRIPT_URL;
+            document.getElementById('sheet-config-modal').classList.remove('hidden');
+        };
+        window.closeSheetConfigModal = () => document.getElementById('sheet-config-modal').classList.add('hidden');
+        window.saveSheetUrl = (e) => {
+            e.preventDefault();
+            SCRIPT_URL = document.getElementById('sheet-url-input').value.trim();
+            localStorage.setItem('rnk_sheets_url', SCRIPT_URL);
+            closeSheetConfigModal();
+            showToast("Google Sheet URL Saved! Syncing...", "success");
+            fetchFromSheets();
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if(SCRIPT_URL) {
+                fetchFromSheets();
+            } else {
+                document.getElementById('loading-screen').classList.add('hidden');
+                openSheetConfigModal();
+            }
+        });
+
+        // --- LOGIN & AUTH ---
+        window.handleLogin = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const user = state.users.find(u => u.id === id && u.password === pass);
+            if(!user) { playError(); showToast("Invalid Account ID or Password!", "error"); return; }
+            if(user.banned) { playError(); showToast("Account is Banned by Government!", "error"); return; }
+            
+            playSuccess();
+            state.currentSessionId = user.id;
+            document.getElementById('login-form').reset();
+            showToast(`Welcome back, ${user.name}!`, "success");
+            checkAndProcessAutoDeadlines();
+            renderApp();
+        };
+
+        window.handleLogout = () => {
+            playClick();
+            state.currentSessionId = null;
+            showToast("Logged out securely.", "info");
+            renderApp();
+        };
+
+        window.showPinReveal = () => {
+            playClick();
+            state.pinRevealed = !state.pinRevealed;
+            renderApp();
+        };
+
+        // --- MONEY TRANSFER ---
+        window.filterRecipients = () => {
+            const q = document.getElementById('recipient-search').value.toLowerCase();
+            const list = document.getElementById('recipient-list');
+            const users = state.users.filter(u => u.id !== state.currentSessionId && u.role !== 'govt');
+            const filtered = q ? users.filter(u => u.name.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) : users;
+            
+            list.innerHTML = filtered.map(u => `
+                <button type="button" onclick="selectRecipient('${u.id}')" class="p-2.5 rounded-xl border text-left bg-slate-900 border-slate-800 hover:border-indigo-500 transition-all">
+                    <p class="font-bold text-xs">${u.name}</p>
+                    <p class="text-[10px] text-slate-400 font-mono">ID: ${u.id}</p>
+                </button>
+            `).join('');
+        };
+
+        window.selectRecipient = (id) => {
+            playClick();
+            state.selectedRecipientId = id;
+            const u = state.users.find(x => x.id === id);
+            document.getElementById('selected-recipient-box').classList.remove('hidden');
+            document.getElementById('selected-recipient-name').textContent = `Sending to: ${u.name} (${u.id})`;
+        };
+        window.clearSelectedRecipient = () => {
+            state.selectedRecipientId = null;
+            document.getElementById('selected-recipient-box').classList.add('hidden');
+        };
+
+        window.handleMoneyTransfer = async (e) => {
+            e.preventDefault();
+            const sender = state.users.find(u => u.id === state.currentSessionId);
+            const recipient = state.users.find(u => u.id === state.selectedRecipientId);
+            const amount = Number(document.getElementById('transfer-amount').value);
+            const pin = document.getElementById('transfer-pin').value.trim();
+
+            if(!recipient) { showToast("Select recipient!", "warning"); return; }
+            if(sender.balance < amount) { showToast("Insufficient balance!", "error"); return; }
+            if(pin !== sender.pin) { showToast("Incorrect 4-digit PIN!", "error"); return; }
+
+            sender.balance -= amount;
+            recipient.balance += amount;
+
+            const txObj = { id: 'TX-'+Date.now(), fromId: sender.id, fromName: sender.name, toId: recipient.id, toName: recipient.name, amount, category: 'Citizen Transfer', timestamp: Date.now() };
+            state.transactions.unshift(txObj);
+
+            await syncToSheets('updateUserBalance', { id: sender.id, balance: sender.balance });
+            await syncToSheets('updateUserBalance', { id: recipient.id, balance: recipient.balance });
+            await syncToSheets('addTransaction', txObj);
+
+            playSuccess();
+            document.getElementById('transfer-form').reset();
+            clearSelectedRecipient();
+            showToast(`RS ${amount.toLocaleString()} transferred successfully!`, "success");
+            checkAndProcessAutoDeadlines();
+            renderApp();
+        };
+
+        // --- DIRECT GOVT PAY ---
+        window.handlePayGovtDirect = async (e) => {
+            e.preventDefault();
+            const sender = state.users.find(u => u.id === state.currentSessionId);
+            const govt = state.users.find(u => u.id === 'Govt_88_87');
+            const amount = Number(document.getElementById('govt-direct-amount').value);
+            const pin = document.getElementById('govt-direct-pin').value.trim();
+            const note = document.getElementById('govt-direct-note').value.trim() || 'Voluntary Payment';
+
+            if(sender.balance < amount) { showToast("Insufficient balance!", "error"); return; }
+            if(pin !== sender.pin) { showToast("Incorrect 4-digit PIN!", "error"); return; }
+
+            sender.balance -= amount;
+            govt.balance += amount;
+
+            const txObj = { id: 'GOV-DIRECT-'+Date.now(), fromId: sender.id, fromName: sender.name, toId: govt.id, toName: govt.name, amount, category: note, timestamp: Date.now() };
+            state.transactions.unshift(txObj);
+
+            await syncToSheets('updateUserBalance', { id: sender.id, balance: sender.balance });
+            await syncToSheets('updateUserBalance', { id: govt.id, balance: govt.balance });
+            await syncToSheets('addTransaction', txObj);
+
+            playSuccess();
+            e.target.reset();
+            showToast(`RS ${amount.toLocaleString()} paid to Government!`, "success");
+            renderApp();
+        };
+
+        // --- PAY SPECIFIC BILL ---
+        window.handlePayBill = async (billId) => {
+            const bill = state.bills.find(b => b.id === billId);
+            if(!bill || bill.status === 'paid') return;
+
+            const user = state.users.find(u => u.id === state.currentSessionId);
+            const govt = state.users.find(u => u.id === 'Govt_88_87');
+            const remaining = bill.amount - (bill.paidAmount || 0);
+
+            if(user.balance < remaining) {
+                showToast(`Insufficient balance! You need RS ${remaining.toLocaleString()}`, "error");
+                return;
+            }
+
+            user.balance -= remaining;
+            govt.balance += remaining;
+            bill.paidAmount = bill.amount;
+            bill.status = 'paid';
+
+            const txObj = {
+                id: 'BILL-PAY-'+Date.now(),
+                fromId: user.id,
+                fromName: user.name,
+                toId: govt.id,
+                toName: govt.name,
+                amount: remaining,
+                category: `Bill Payment (${bill.type})`,
+                timestamp: Date.now()
+            };
+            state.transactions.unshift(txObj);
+
+            await syncToSheets('updateUserBalance', { id: user.id, balance: user.balance });
+            await syncToSheets('updateUserBalance', { id: govt.id, balance: govt.balance });
+            await syncToSheets('updateBill', bill);
+            await syncToSheets('addTransaction', txObj);
+
+            playSuccess();
+            showToast(`${bill.type} paid successfully!`, "success");
+            renderApp();
+        };
+
+        // --- GOV ACTIONS ---
+        window.handleGovtIssueBill = async (e) => {
+            e.preventDefault();
+            const targetId = document.getElementById('govt-bill-user').value;
+            const type = document.getElementById('govt-bill-type').value;
+            const amount = Number(document.getElementById('govt-bill-amount').value);
+            const deadline = document.getElementById('govt-bill-deadline').value;
+            const targetUser = state.users.find(u => u.id === targetId);
+
+            const newBill = {
+                id: 'BILL-'+Date.now(),
+                userId: targetId,
+                userName: targetUser ? targetUser.name : 'Citizen',
+                type: type,
+                amount: amount,
+                paidAmount: 0,
+                deadline: deadline,
+                status: 'unpaid',
+                timestamp: Date.now()
+            };
+
+            state.bills.unshift(newBill);
+            await syncToSheets('addBill', newBill);
+
+            playSuccess();
+            e.target.reset();
+            showToast(`Issued ${type} of RS ${amount} to ${targetUser.name}!`, "success");
+            renderGovt();
+        };
+
+        window.handleGovtGrantMoney = async (e) => {
+            e.preventDefault();
+            const targetId = document.getElementById('govt-grant-user').value;
+            const amount = Number(document.getElementById('govt-grant-amount').value);
+            const target = state.users.find(u => u.id === targetId);
+            const govt = state.users.find(u => u.id === 'Govt_88_87');
+
+            target.balance += amount;
+            const txObj = { id: 'GRANT-'+Date.now(), fromId: govt.id, fromName: govt.name, toId: target.id, toName: target.name, amount, category: 'Government Grant', timestamp: Date.now() };
+            state.transactions.unshift(txObj);
+
+            await syncToSheets('updateUserBalance', { id: target.id, balance: target.balance });
+            await syncToSheets('addTransaction', txObj);
+
+            playSuccess();
+            document.getElementById('govt-grant-amount').value = '';
+            showToast(`Granted RS ${amount} to ${target.name}!`, "success");
+            checkAndProcessAutoDeadlines();
+            renderApp();
+        };
+
+        window.handleCreateCitizen = async (e) => {
+            e.preventDefault();
+            const newUser = {
+                id: document.getElementById('new-user-id').value.trim(),
+                name: document.getElementById('new-user-name').value.trim(),
+                password: document.getElementById('new-user-pass').value,
+                balance: Number(document.getElementById('new-user-bal').value),
+                pin: document.getElementById('new-user-pin').value.trim(),
+                role: 'user',
+                banned: false
+            };
+
+            state.users.push(newUser);
+            await syncToSheets('addUser', newUser);
+            playSuccess();
+            e.target.reset();
+            showToast(`Citizen ${newUser.name} created!`, "success");
+            renderApp();
+        };
+
+        window.toggleBan = async (id) => {
+            const u = state.users.find(x => x.id === id);
+            u.banned = !u.banned;
+            await syncToSheets('updateUserBan', { id: u.id, banned: u.banned });
+            playClick();
+            showToast(`Citizen ${u.name} status updated.`, "info");
+            renderGovt();
+        };
+
+        window.openResetModal = () => document.getElementById('reset-modal').classList.remove('hidden');
+        window.closeResetModal = () => document.getElementById('reset-modal').classList.add('hidden');
+        window.handleFullReset = (e) => {
+            e.preventDefault();
+            if(document.getElementById('reset-pass-input').value === '2rnk8') {
+                localStorage.clear();
+                location.reload();
+            } else {
+                showToast("Incorrect master password!", "error");
+            }
+        };
+
+        window.setHistoryFilter = (f) => {
+            playClick();
+            state.historyFilter = f;
+            document.getElementById('filter-all-btn').className = f === 'all' ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white' : 'px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300';
+            document.getElementById('filter-sent-btn').className = f === 'sent' ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white' : 'px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300';
+            document.getElementById('filter-received-btn').className = f === 'received' ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white' : 'px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300';
+            const user = state.users.find(u => u.id === state.currentSessionId);
+            if(user) renderUserHistory(user);
+        };
+
+        // --- RENDER APP ---
+        function renderApp() {
+            const user = state.users.find(u => u.id === state.currentSessionId);
+            const loginView = document.getElementById('login-view');
+            const userDash = document.getElementById('user-dashboard');
+            const govtDash = document.getElementById('govt-dashboard');
+
+            if(!user) {
+                loginView.classList.remove('hidden'); userDash.classList.add('hidden'); govtDash.classList.add('hidden');
+                return;
+            }
+            loginView.classList.add('hidden');
+            if(user.role === 'govt') {
+                userDash.classList.add('hidden'); govtDash.classList.remove('hidden');
+                renderGovt();
+            } else {
+                govtDash.classList.add('hidden'); userDash.classList.remove('hidden');
+                renderUser(user);
+            }
+        }
+
+        function renderUser(user) {
+            document.getElementById('user-avatar').textContent = user.name.charAt(0);
+            document.getElementById('user-id-badge').textContent = `ID: ${user.id}`;
+            document.getElementById('user-display-name').textContent = user.name;
+            document.getElementById('card-holder-name').textContent = user.name;
+            document.getElementById('user-balance').textContent = `RS = ${user.balance.toLocaleString()}`;
+            document.getElementById('card-pin-badge').textContent = state.pinRevealed ? user.pin : '****';
+            document.getElementById('pin-btn-text').textContent = state.pinRevealed ? 'Hide PIN' : 'Show PIN';
+
+            filterRecipients();
+            renderUserBills(user);
+            renderUserHistory(user);
+        }
+
+        function renderUserBills(user) {
+            const myBills = state.bills.filter(b => b.userId === user.id);
+            const container = document.getElementById('user-bills-container');
+            
+            if(!myBills.length) {
+                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full py-4 text-center">No government bills or taxes assigned yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = myBills.map(b => {
+                const remaining = b.amount - (b.paidAmount || 0);
+                const isPaid = b.status === 'paid';
+                return `
+                    <div class="p-4 rounded-2xl bg-slate-900 border ${isPaid ? 'border-emerald-500/30' : 'border-rose-500/40'} flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-sm text-indigo-300">${b.type}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${b.status}</span>
+                            </div>
+                            <p class="text-2xl font-display font-extrabold text-white mb-1">RS = ${b.amount.toLocaleString()}</p>
+                            ${b.paidAmount > 0 && !isPaid ? `<p class="text-xs text-amber-400">Paid: RS ${b.paidAmount.toLocaleString()} | Remaining: RS ${remaining.toLocaleString()}</p>` : ''}
+                            <p class="text-xs text-slate-400 mt-2"><i class="fa-regular fa-calendar mr-1"></i> Due By: <span class="text-white font-semibold">${b.deadline}</span></p>
+                        </div>
+                        <div class="mt-4">
+                            ${!isPaid ? `
+                                <button onclick="handlePayBill('${b.id}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 text-white font-bold text-xs shadow-lg btn-press">
+                                    Pay RS ${remaining.toLocaleString()} Now
+                                </button>
+                            ` : `
+                                <div class="text-center py-2 text-emerald-400 font-bold text-xs"><i class="fa-solid fa-circle-check mr-1"></i> Cleared & Paid</div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderUserHistory(user) {
+            let history = state.transactions.filter(t => t.fromId === user.id || t.toId === user.id);
+            if(state.historyFilter === 'sent') history = history.filter(t => t.fromId === user.id);
+            if(state.historyFilter === 'received') history = history.filter(t => t.toId === user.id);
+
+            const container = document.getElementById('user-history-list');
+            container.innerHTML = history.length ? history.map(t => {
+                const incoming = t.toId === user.id;
+                return `
+                    <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl ${incoming ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'} flex items-center justify-center font-bold">
+                                <i class="fa-solid ${incoming ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-200">${incoming ? 'Received From: ' + t.fromName : 'Sent To: ' + t.toName}</p>
+                                <p class="text-[10px] text-slate-400">${t.category} • ${new Date(t.timestamp).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-sm ${incoming ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${incoming ? '+' : '-'} RS ${t.amount.toLocaleString()}
+                        </span>
+                    </div>
+                `;
+            }).join('') : `<p class="text-xs text-slate-400 text-center py-6">No transaction records found.</p>`;
+        }
+
+        function renderGovt() {
+            const citizens = state.users.filter(u => u.role !== 'govt');
+            document.getElementById('govt-bill-user').innerHTML = citizens.map(c => `<option value="${c.id}">${c.name} (${c.id})</option>`).join('');
+            document.getElementById('govt-grant-user').innerHTML = citizens.map(c => `<option value="${c.id}">${c.name} (${c.id})</option>`).join('');
+            document.getElementById('govt-total-citizens').textContent = citizens.length;
+            document.getElementById('govt-total-tx').textContent = state.transactions.length;
+            document.getElementById('govt-active-bills-count').textContent = state.bills.filter(b => b.status !== 'paid').length;
+
+            let totalRev = 0;
+            state.transactions.forEach(t => { if(t.toId === 'Govt_88_87') totalRev += t.amount; });
+            document.getElementById('govt-total-collected').textContent = `RS = ${totalRev.toLocaleString()}`;
+
+            // Govt Master Transactions Table
+            document.getElementById('govt-tx-table').innerHTML = state.transactions.length ? state.transactions.slice(0, 30).map(t => `
+                <tr class="border-b border-slate-800/80 hover:bg-slate-900/50">
+                    <td class="py-3 px-4 font-mono text-xs text-indigo-400">${t.id}</td>
+                    <td class="py-3 px-4 font-bold">${t.fromName} <span class="text-[10px] text-slate-500 font-mono">(${t.fromId})</span></td>
+                    <td class="py-3 px-4 font-bold">${t.toName} <span class="text-[10px] text-slate-500 font-mono">(${t.toId})</span></td>
+                    <td class="py-3 px-4 text-xs text-slate-300">${t.category}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-400">RS = ${t.amount.toLocaleString()}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="5" class="py-6 text-center text-slate-500 text-xs">No transactions recorded.</td></tr>`;
+
+            // Citizens Table
+            document.getElementById('govt-users-table').innerHTML = citizens.map(c => `
+                <tr class="border-b border-slate-800/80">
+                    <td class="py-3 px-4 font-bold">${c.name}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-slate-400">${c.id}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-indigo-400">${c.pin}</td>
+                    <td class="py-3 px-4 font-bold text-emerald-400">RS = ${c.balance.toLocaleString()}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="toggleBan('${c.id}')" class="px-3 py-1 rounded-lg text-xs font-bold ${c.banned ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white'} transition-all">${c.banned ? 'Unban' : 'Ban'}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
